@@ -3911,7 +3911,9 @@ static auto _HandlePlatformOverlayVar = [](void)
     }
   }
 
-  if ( SK_Platform_IsOverlayAware  (     ) &&
+  // Respect [Notification.System] Silent=true for the overlay pause toast
+  if ( (! config.notifications.silent)     &&
+       SK_Platform_IsOverlayAware  (     ) &&
       (SK_Platform_GetOverlayState (false) ||
        SK_Platform_GetOverlayState (true)) )
   {
