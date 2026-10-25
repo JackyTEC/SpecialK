@@ -37,7 +37,6 @@
 #include <SpecialK/render/d3d11/d3d11_core.h>
 #include <SpecialK/render/d3d11/d3d11_tex_mgr.h>
 #include <SpecialK/render/d3d11/d3d11_state_tracker.h>
-#include <SpecialK/render/ngx/ngx.h>
 
 #include <imgui/backends/imgui_d3d11.h>
 #include <imgui/backends/imgui_d3d12.h>
@@ -50,19 +49,15 @@
 #include <math.h>
 
 #include <CoreWindow.h>
-#include <VersionHelpers.h>
 
 #undef IMGUI_VERSION_NUM
 #include <ReShade/reshade.hpp>
-#include <ReShade/reshade_api.hpp>
 
 BOOL _NO_ALLOW_MODE_SWITCH = FALSE;
 DXGI_SWAP_CHAIN_DESC  _ORIGINAL_SWAP_CHAIN_DESC  = { };
 DXGI_SWAP_CHAIN_DESC1 _ORIGINAL_SWAP_CHAIN_DESC1 = { };
 
 int SK_DXGI_HighestFactorySupported = -1;
-
-#include <../depends/include/DirectXTex/d3dx12.h>
 
 using D3D12GetDebugInterface_pfn = HRESULT (WINAPI* )( _In_ REFIID riid, _COM_Outptr_opt_ void** ppvDebug );
 
@@ -9052,22 +9047,53 @@ SK_DXGI_DetermineHighestSupportedFactoryVersion (void)
   SK_ComPtr <IDXGIFactory1> pFactory1;
   SK_ComPtr <IDXGIFactory>  pFactory;
 
-  if (     SUCCEEDED (CreateDXGIFactory2_Import (0x0, IID_IDXGIFactory7, (void **)&pFactory7.p)))
-                                                SK_DXGI_HighestFactorySupported          = 7;
-  else if (SUCCEEDED (CreateDXGIFactory2_Import (0x0, IID_IDXGIFactory6, (void **)&pFactory6.p)))
-                                                SK_DXGI_HighestFactorySupported          = 6;
-  else if (SUCCEEDED (CreateDXGIFactory2_Import (0x0, IID_IDXGIFactory5, (void **)&pFactory5.p)))
-                                                SK_DXGI_HighestFactorySupported          = 5;
-  else if (SUCCEEDED (CreateDXGIFactory2_Import (0x0, IID_IDXGIFactory4, (void **)&pFactory4.p)))
-                                                SK_DXGI_HighestFactorySupported          = 4;
-  else if (SUCCEEDED (CreateDXGIFactory2_Import (0x0, IID_IDXGIFactory3, (void **)&pFactory3.p)))
-                                                SK_DXGI_HighestFactorySupported          = 3;
-  else if (SUCCEEDED (CreateDXGIFactory2_Import (0x0, IID_IDXGIFactory2, (void **)&pFactory2.p)))
-                                                SK_DXGI_HighestFactorySupported          = 2;
-  else if (SUCCEEDED (CreateDXGIFactory2_Import (0x0, IID_IDXGIFactory1, (void **)&pFactory1.p)))
-                                                SK_DXGI_HighestFactorySupported          = 1;
-  else if (SUCCEEDED (CreateDXGIFactory2_Import (0x0, IID_IDXGIFactory,  (void **)&pFactory.p)))
-                                                SK_DXGI_HighestFactorySupported          = 0;
+  if (CreateDXGIFactory2_Import != nullptr)
+  {
+    if (     SUCCEEDED (CreateDXGIFactory2_Import (0x0, IID_IDXGIFactory7, (void **)&pFactory7.p)))
+                                                  SK_DXGI_HighestFactorySupported          = 7;
+    else if (SUCCEEDED (CreateDXGIFactory2_Import (0x0, IID_IDXGIFactory6, (void **)&pFactory6.p)))
+                                                  SK_DXGI_HighestFactorySupported          = 6;
+    else if (SUCCEEDED (CreateDXGIFactory2_Import (0x0, IID_IDXGIFactory5, (void **)&pFactory5.p)))
+                                                  SK_DXGI_HighestFactorySupported          = 5;
+    else if (SUCCEEDED (CreateDXGIFactory2_Import (0x0, IID_IDXGIFactory4, (void **)&pFactory4.p)))
+                                                  SK_DXGI_HighestFactorySupported          = 4;
+    else if (SUCCEEDED (CreateDXGIFactory2_Import (0x0, IID_IDXGIFactory3, (void **)&pFactory3.p)))
+                                                  SK_DXGI_HighestFactorySupported          = 3;
+    else if (SUCCEEDED (CreateDXGIFactory2_Import (0x0, IID_IDXGIFactory2, (void **)&pFactory2.p)))
+                                                  SK_DXGI_HighestFactorySupported          = 2;
+    else if (SUCCEEDED (CreateDXGIFactory2_Import (0x0, IID_IDXGIFactory1, (void **)&pFactory1.p)))
+                                                  SK_DXGI_HighestFactorySupported          = 1;
+    else if (SUCCEEDED (CreateDXGIFactory2_Import (0x0, IID_IDXGIFactory,  (void **)&pFactory.p)))
+                                                  SK_DXGI_HighestFactorySupported          = 0;
+    else
+    {
+      SK_LOGi0 (L"DXGI Factories Are Not Supported On This System...");
+    }
+  }
+  else if (CreateDXGIFactory1_Import != nullptr)
+  {
+    if (     SUCCEEDED (CreateDXGIFactory1_Import (IID_IDXGIFactory7, (void **)&pFactory7.p)))
+                                                  SK_DXGI_HighestFactorySupported          = 7;
+    else if (SUCCEEDED (CreateDXGIFactory1_Import (IID_IDXGIFactory6, (void **)&pFactory6.p)))
+                                                  SK_DXGI_HighestFactorySupported          = 6;
+    else if (SUCCEEDED (CreateDXGIFactory1_Import (IID_IDXGIFactory5, (void **)&pFactory5.p)))
+                                                  SK_DXGI_HighestFactorySupported          = 5;
+    else if (SUCCEEDED (CreateDXGIFactory1_Import (IID_IDXGIFactory4, (void **)&pFactory4.p)))
+                                                  SK_DXGI_HighestFactorySupported          = 4;
+    else if (SUCCEEDED (CreateDXGIFactory1_Import (IID_IDXGIFactory3, (void **)&pFactory3.p)))
+                                                  SK_DXGI_HighestFactorySupported          = 3;
+    else if (SUCCEEDED (CreateDXGIFactory1_Import (IID_IDXGIFactory2, (void **)&pFactory2.p)))
+                                                  SK_DXGI_HighestFactorySupported          = 2;
+    else if (SUCCEEDED (CreateDXGIFactory1_Import (IID_IDXGIFactory1, (void **)&pFactory1.p)))
+                                                  SK_DXGI_HighestFactorySupported          = 1;
+    else if (SUCCEEDED (CreateDXGIFactory1_Import (IID_IDXGIFactory,  (void **)&pFactory.p)))
+                                                  SK_DXGI_HighestFactorySupported          = 0;
+    else
+    {
+      SK_LOGi0 (L"DXGI Factories Are Not Supported On This System...");
+    }
+  }
+
   else
   {
     SK_LOGi0 (L"DXGI Factories Are Not Supported On This System...");
@@ -9345,7 +9371,11 @@ dxgi_init_callback (finish_pfn finish)
         static UINT
               spin_count = 0;
         if (++spin_count > 100)
-          SK_SleepEx (0, FALSE);
+          SK_SleepEx (15UL, FALSE);
+
+        // Prevent deadlock when async init is disabled.
+        if (spin_count > 101 && SK_GetCurrentThreadId () == ReadULongAcquire (&__SK_DLL_InitThreadId))
+          break;
       }
     } while (! ReadAcquire (&__dxgi_ready));
   }
@@ -10778,8 +10808,11 @@ HookDXGI (LPVOID user)
     }
 
     SK_ComPtr <IDXGIFactory7>                pFactory7;
-    CreateDXGIFactory2_Import ( factory_flags,
-         __uuidof (IDXGIFactory7), (void **)&pFactory7.p);
+    if (CreateDXGIFactory2_Import != nullptr)
+      CreateDXGIFactory2_Import ( factory_flags,
+           __uuidof (IDXGIFactory7), (void **)&pFactory7.p);
+    else if (CreateDXGIFactory1_Import != nullptr)
+      CreateDXGIFactory1_Import (__uuidof (IDXGIFactory7), (void**)&pFactory7.p);
 
     SK_ComPtr <IDXGIFactory>
         pFactory    = (IDXGIFactory *)
@@ -10790,9 +10823,14 @@ HookDXGI (LPVOID user)
                                    IID_IDXGIFactory3, IID_IDXGIFactory4, IID_IDXGIFactory5,
                                    IID_IDXGIFactory6, IID_IDXGIFactory7 };
 
-      CreateDXGIFactory2_Import ( factory_flags,
-             iids [std::clamp (SK_DXGI_HighestFactorySupported, 0, 7)],
-                       (void **)&pFactory.p );
+      if (CreateDXGIFactory2_Import != nullptr)
+        CreateDXGIFactory2_Import ( factory_flags,
+               iids [std::clamp (SK_DXGI_HighestFactorySupported, 0, 7)],
+                         (void **)&pFactory.p );
+      else
+        CreateDXGIFactory1_Import (
+               iids [std::clamp (SK_DXGI_HighestFactorySupported, 0, 7)],
+                         (void **)&pFactory.p );
     }
 
     if (pFactory7 != nullptr)

@@ -474,18 +474,16 @@ SK_LoadGPUVendorAPIs (void)
 #endif
 }
 
-void SK_FetchBuiltinSounds (void)
+void SK_FetchBuiltinSounds (bool strict_integrity_check)
 {
   SK_PROFILE_FIRST_CALL
+
+  static bool incomplete_set = false;
 
   wchar_t           wszArchive  [MAX_PATH + 2] = { };
   static const auto wszDestination =
       std::filesystem::path (SK_GetInstallPath ()) /
                         LR"(Assets\Shared\Sounds\)";
-
-  std::error_code                                      ec;
-  if (! std::filesystem::exists (SK_GetInstallPath (), ec))
-    return;
 
   static const std::filesystem::path
     predefined_sounds [] =
@@ -497,14 +495,32 @@ void SK_FetchBuiltinSounds (void)
       std::filesystem::path (wszDestination) / LR"(xbox.wav)"
     };
 
-  static bool incomplete_set = false;
+  std::error_code ec;
 
-  for ( auto& sound : predefined_sounds )
+  if (! strict_integrity_check)
   {
-    if (! std::filesystem::exists (sound, ec))
+    // Not technically correct, as this may not catch old installs that lack
+    //   one of these files, but avoids 5 blocking file existence checks every
+    //     single time SK is injected.
+
+    if (std::filesystem::exists (predefined_sounds [0], ec))
+      return;
+
+    incomplete_set = true;
+  }
+
+  else
+  {
+    if (! std::filesystem::exists (SK_GetInstallPath (), ec))
+      return;
+
+    for ( auto& sound : predefined_sounds )
     {
-      incomplete_set = true;
-      break;
+      if (! std::filesystem::exists (sound, ec))
+      {
+        incomplete_set = true;
+        break;
+      }
     }
   }
 
@@ -584,7 +600,14 @@ extern void BasicInit (void);
             BasicInit (    );
 #endif
 
-  SK_FetchBuiltinSounds ();
+  SK_FetchBuiltinSounds (false);
+
+  // On first launch, acquire SteamAPI plug-in if necessary
+  if (config.platform.equivalent_steam_app == -1 &&
+      config.platform.silent               == false)
+  {
+    SK_Steam_FetchOptionalPlugIn ();
+  }
 
   for (auto& init_fn : plugin_mgr->init_fns)
              init_fn ();
@@ -4026,10 +4049,29 @@ SK_BeginBufferSwapEx (BOOL bWaitOnFail)
   SK_PROFILE_SCOPED_TASK (SK_BeginBufferSwapEx)
 
   // Update the active framerate limit for window state agnostic functions.
-  __target_fps_now =
+  float fps_to_set =
     (SK_IsGameWindowActive () || __target_fps_bg <= 0.0f) ?
                                  __target_fps             :
                                  __target_fps_bg;
+
+  // Apply a framerate limit for DLSS FG games when menus are active,
+  //   if the user has specified a limit.
+  if (config.nvidia.dlss.dlssfg_menu_fps > 0.0f && (! __SK_IsDLSSGActive))
+  {
+    if ( (SK_NGX_DLSS12.frame_gen.LastFrame != 0 ||
+          SK_NGX_VULKAN.frame_gen.LastFrame != 0) )
+    {
+      if (SK_IsGameWindowActive () || __target_fps_bg <= 0.0f)
+      {
+        fps_to_set =
+          config.nvidia.dlss.dlssfg_menu_fps;
+
+        __target_fps_temp = fps_to_set;
+      }
+    }
+  }
+
+  __target_fps_now = fps_to_set;
 
   void SK_Render_CountVBlanks (void);
        SK_Render_CountVBlanks ();

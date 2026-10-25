@@ -1,6 +1,4 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
-/**
+﻿/**
  * This file is part of Special K.
  *
  * Special K is free software : you can redistribute it
@@ -159,6 +157,7 @@ SK_GetCurrentGameID (void) noexcept
           { L"okami.exe",                              SK_GAME_ID::Okami                        },
           { L"DuckTales.exe",                          SK_GAME_ID::DuckTalesRemastered          },
           { L"mafia3.exe",                             SK_GAME_ID::Mafia3                       },
+          { L"mafia3definitiveedition.exe",            SK_GAME_ID::Mafia3DefinitiveEdition      },
           { L"Owlboy.exe",                             SK_GAME_ID::Owlboy                       },
           { L"DarkSoulsIII.exe",                       SK_GAME_ID::DarkSouls3                   },
           { L"Fallout4.exe",                           SK_GAME_ID::Fallout4                     },
@@ -342,7 +341,9 @@ SK_GetCurrentGameID (void) noexcept
           { L"htgame.exe",                             SK_GAME_ID::NevernessToEverness          },
           { L"Dispatch-Win64-Shipping.exe",            SK_GAME_ID::Dispatch                     },
           { L"DispatchEGS-Win64-Shipping.exe",         SK_GAME_ID::Dispatch                     },
-          { L"Timberborn.exe",                         SK_GAME_ID::Timberborn                   }
+          { L"Timberborn.exe",                         SK_GAME_ID::Timberborn                   },
+          { L"CONTROLResonant.exe",                    SK_GAME_ID::CONTROL_Resonant             },
+          { L"helldivers2.exe",                        SK_GAME_ID::Helldivers2                  }
         };
 
     first_check  = false;
@@ -693,8 +694,6 @@ struct {
     sk::ParameterInt64*   appid                   = nullptr;
     sk::ParameterInt*     init_delay              = nullptr;
     sk::ParameterBool*    auto_pump               = nullptr;
-    sk::ParameterInt*     callback_probe          = nullptr;
-    sk::ParameterBool*    block_stat_callback     = nullptr;
     sk::ParameterBool*    filter_stat_callbacks   = nullptr;
     sk::ParameterBool*    load_early              = nullptr;
     sk::ParameterBool*    early_overlay           = nullptr;
@@ -924,6 +923,7 @@ struct {
     sk::ParameterBool*    spoof_feature_support   = nullptr;
     sk::ParameterBool*    streamline_dbg_out      = nullptr;
     sk::ParameterBool*    slop_stop_5000          = nullptr;
+    sk::ParameterFloat*   dlssfg_menu_fps         = nullptr;
   } dlss;
 } nvidia;
 
@@ -1351,7 +1351,6 @@ struct {
   sk::ParameterBool*      auto_large_address      = nullptr; // 32-bit only
   sk::ParameterBool*      async_init              = nullptr;
   sk::ParameterBool*      reshade_mode            = nullptr;
-  sk::ParameterBool*      fsr3_mode               = nullptr;
   sk::ParameterInt*       sdl_sanity_level        = nullptr;
   sk::ParameterInt*       debug_level             = nullptr;
   struct {
@@ -2051,7 +2050,6 @@ auto DeclKeybind =
 #endif
     ConfigEntry (compatibility.async_init,               L"Runs hook initialization on a separate thread; high safety",dll_ini,         L"Compatibility.General", L"AsyncInit"),
     ConfigEntry (compatibility.reshade_mode,             L"Initializes hooks in a way that ReShade will not interfere",dll_ini,         L"Compatibility.General", L"ReShadeMode"),
-    ConfigEntry (compatibility.fsr3_mode,                L"Avoid hooks on CreateSwapChainForHwnd",                     dll_ini,         L"Compatibility.General", L"FSR3Mode"),
     ConfigEntry (compatibility.debug_level,              L"Debug Level (0=Most debug code OFF, >0=Normal behavior)",   dll_ini,         L"Compatibility.General", L"DebugLevel"),
     ConfigEntry (compatibility.sdl_sanity_level,         L"Set Default (1) or Override (2) SDL input/window behavior.",dll_ini,         L"Compatibility.General", L"SDLSanityLevel"),
     // Refer to SDL_hints.h, only the most useful options are exposed here...
@@ -2084,7 +2082,6 @@ auto DeclKeybind =
 #endif
 
     ConfigEntry (apis.OpenGL.hook,                       L"Enable OpenGL Hooking",                                     dll_ini,         L"API.Hook",              L"OpenGL"),
-    ConfigEntry (apis.OpenGL.debug,                      L"Enable OpenGL Debugging",                                   dll_ini,         L"OpenGL.System",         L"EnableDebug"),
 
     // Misc.
     //////////////////////////////////////////////////////////////////////////
@@ -2228,6 +2225,7 @@ auto DeclKeybind =
     ConfigEntry (nvidia.dlss.spoof_feature_support,      L"Report all NGX (D3D11/D3D12) features supported on all HW.",dll_ini,         L"NVIDIA.DLSS",           L"SpoofFeatureSupport"),
     ConfigEntry (nvidia.dlss.streamline_dbg_out,         L"Output Streamline Framework's Debug to game_output.log.",   dll_ini,         L"NVIDIA.DLSS",           L"UseStreamlineDebugLog"),
     ConfigEntry (nvidia.dlss.slop_stop_5000,             L"Prevent DLSS5 from being used.",                            dll_ini,         L"NVIDIA.DLSS",           L"SlopStop5000"),
+    ConfigEntry (nvidia.dlss.dlssfg_menu_fps,            L"Framerate Limit to apply in menus in DLSS FG games.",       dll_ini,         L"NVIDIA.DLSS",           L"FrameGenMenuFPS"),
 
     ConfigEntry (render.hdr.enable_32bpc,                L"Experimental - Use 32bpc for HDR",                          dll_ini,         L"SpecialK.HDR",          L"Enable128BitPipeline"),
     ConfigEntry (render.hdr.remaster_8bpc_as_unorm,      L"Do not use Floating-Point RTs when re-mastering 8-bpc+ RTs",dll_ini,         L"SpecialK.HDR",          L"Keep8BpcRemastersUNORM"),
@@ -2423,8 +2421,6 @@ auto DeclKeybind =
     ConfigEntry (steam.system.appid,                     L"Steam AppID",                                               dll_ini,         L"Steam.System",          L"AppID"),
     ConfigEntry (steam.system.init_delay,                L"Delay SteamAPI initialization if the game doesn't do it",   dll_ini,         L"Steam.System",          L"AutoInitDelay"),
     ConfigEntry (steam.system.auto_pump,                 L"Should we force the game to run Steam callbacks?",          dll_ini,         L"Steam.System",          L"AutoPumpCallbacks"),
-    ConfigEntry (steam.system.callback_probe,            L"Seconds to measure game's callback rate before auto-pump",  dll_ini,         L"Steam.System",          L"CallbackProbeTime"),
-    ConfigEntry (steam.system.block_stat_callback,       L"Block the User Stats Receipt Callback?",                    dll_ini,         L"Steam.System",          L"BlockUserStatsCallback"),
     ConfigEntry (steam.system.filter_stat_callbacks,     L"Filter Unrelated Data from the User Stats Receipt Callback",dll_ini,         L"Steam.System",          L"FilterExternalDataFromCallbacks"),
     ConfigEntry (steam.system.load_early,                L"Load the Steam Client DLL Early?",                          dll_ini,         L"Steam.System",          L"PreLoadSteamClient"),
     ConfigEntry (steam.system.early_overlay,             L"Load the Steam Overlay Early",                              dll_ini,         L"Steam.System",          L"PreLoadSteamOverlay"),
@@ -3069,6 +3065,11 @@ auto DeclKeybind =
 
       case SK_GAME_ID::Mafia3:
         config.steam.force_load_steamapi        = true;
+        break;
+
+      case SK_GAME_ID::Mafia3DefinitiveEdition:
+        // Bypasses 2K fairplay detection.
+        config.steam.crapcom_mode               = true;
         break;
 
       // (0.8.58 - 1/1/18) -> API autodetect doesn't like XNA games
@@ -4039,8 +4040,24 @@ auto DeclKeybind =
 
       case SK_GAME_ID::Metro2033:
       {
-        // Disable to prevent visual artifacts on tittle screen
-        config.render.framerate.flip_discard = false;
+        // Because there are now two versions of this game sharing the same executable name,
+        //   we need to set this INI setting on every launch.
+        //
+        //   * D3D11 needs it disabled, the new D3D12 version needs it enabled :-\
+        //
+        if (! (PathFileExistsW (L"amd_fidelityfx_dx12.dll") ||
+               PathFileExistsW (L"nvngx_dlss.dll")))
+        {
+          // Disable to prevent visual artifacts on tittle screen
+          config.render.framerate.flip_discard = false;
+        }
+
+        else
+        {
+          config.render.framerate.flip_discard = true;
+        }
+
+        render.framerate.flip_discard->store (config.render.framerate.flip_discard);
       } break;
 
       case SK_GAME_ID::StarWarsOutlaws:
@@ -4257,6 +4274,15 @@ auto DeclKeybind =
         break;
 
 #ifdef _M_AMD64
+      case SK_GAME_ID::Helldivers2:
+        config.window.dont_hook_wndproc                = true; // Do not mess with game memory, anti-cheat will activate
+        break;
+
+      case SK_GAME_ID::CONTROL_Resonant:
+        config.input.ui.use_hw_cursor                  = false;
+        config.render.framerate.streamline.pacing_mode = 2; // Low-Latency
+        break;
+
       case SK_GAME_ID::Timberborn:
         config.window.allow_ghosting = false;
         break;
@@ -4806,7 +4832,6 @@ auto DeclKeybind =
   // Load Parameters
   //
   compatibility.sdl_sanity_level->load      (config.compatibility.sdl_sanity_level);
-  compatibility.fsr3_mode->load             (config.compatibility.fsr3_mode);
   compatibility.reshade_mode->load          (config.compatibility.reshade_mode);
   compatibility.async_init->load            (config.compatibility.init_on_separate_thread);
   compatibility.disable_nv_bloat->load      (config.compatibility.disable_nv_bloat);
@@ -5158,6 +5183,7 @@ auto DeclKeybind =
   nvidia.dlss.spoof_feature_support->load    (config.nvidia.dlss.spoof_support);
   nvidia.dlss.streamline_dbg_out->load       (config.nvidia.dlss.streamline_dbg_out);
   nvidia.dlss.slop_stop_5000->load           (config.nvidia.dlss.slop_stop_5000);
+  nvidia.dlss.dlssfg_menu_fps->load          (config.nvidia.dlss.dlssfg_menu_fps);
 
   render.hdr.enable_32bpc->load              (config.render.hdr.enable_32bpc);
   render.hdr.remaster_8bpc_as_unorm->load    (config.render.hdr.remaster_8bpc_as_unorm);
@@ -6273,8 +6299,6 @@ auto DeclKeybind =
 
   steam.system.init_delay->load               (config.steam.init_delay);
   steam.system.auto_pump->load                (config.steam.auto_pump_callbacks);
-  steam.system.callback_probe->load           (config.steam.callback_probe_secs);
-  steam.system.block_stat_callback->load      (config.steam.block_stat_callback);
   steam.system.filter_stat_callbacks->load    (config.steam.filter_stat_callback);
   steam.system.load_early->load               (config.steam.preload_client);
   steam.system.early_overlay->load            (config.steam.preload_overlay);
@@ -7034,7 +7058,6 @@ SK_SaveConfig ( std::wstring name,
 
 
   // Don't write these to INI by default, they're rarely needed and planned to be removed
-//compatibility.fsr3_mode->store              (config.compatibility.fsr3_mode);
 //compatibility.reshade_mode->store           (config.compatibility.reshade_mode);
   compatibility.async_init->store             (config.compatibility.init_on_separate_thread);
   compatibility.disable_nv_bloat->store       (config.compatibility.disable_nv_bloat);
@@ -7627,6 +7650,7 @@ SK_SaveConfig ( std::wstring name,
       nvidia.dlss.spoof_feature_support->store    (config.nvidia.dlss.spoof_support);
       nvidia.dlss.streamline_dbg_out->store       (config.nvidia.dlss.streamline_dbg_out);
       nvidia.dlss.slop_stop_5000->store           (config.nvidia.dlss.slop_stop_5000);
+      nvidia.dlss.dlssfg_menu_fps->store          (config.nvidia.dlss.dlssfg_menu_fps);
       render.framerate.max_delta_time->store      (config.render.framerate.max_delta_time);
       render.framerate.flip_discard->store        (config.render.framerate.flip_discard);
       render.framerate.flip_sequential->store     (config.render.framerate.flip_sequential);
@@ -7881,8 +7905,6 @@ SK_SaveConfig ( std::wstring name,
   steam.system.appid->store                    (config.steam.appid);
   steam.system.init_delay->store               (config.steam.init_delay);
   steam.system.auto_pump->store                (config.steam.auto_pump_callbacks);
-  steam.system.callback_probe->store           (config.steam.callback_probe_secs);
-  steam.system.block_stat_callback->store      (config.steam.block_stat_callback);
   steam.system.filter_stat_callbacks->store    (config.steam.filter_stat_callback);
   steam.system.load_early->store               (config.steam.preload_client);
   steam.system.early_overlay->store            (config.steam.preload_overlay);

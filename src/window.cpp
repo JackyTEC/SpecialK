@@ -24,8 +24,6 @@
 #include <SpecialK/stdafx.h>
 #include <imgui/backends/imgui_d3d11.h>
 
-#include <future>
-
 #ifdef  __SK_SUBSYSTEM__
 #undef  __SK_SUBSYSTEM__
 #endif
@@ -7383,6 +7381,7 @@ SK_Win32_IsDummyWindowClass (WNDCLASSEXW* pWindowClass)
   //(!_wcsicmp (pWindowClass->lpszClassName, L"InvisibleWindowClassNvPresent"))         || // NVIDIA SmoothMotion
     (!_wcsicmp (pWindowClass->lpszClassName, L"TempDirect3D11OverlayWindow"))           || // Steam version of Titan Quest
     (!_wcsicmp (pWindowClass->lpszClassName, L"TempWindowClass"))                       || // Some kind of snake oil app called smart game booster
+    (!_wcsicmp (pWindowClass->lpszClassName, L"gpdcw"))                                 || // Unknown framework referring to itself as gp in SlashZero
 
     // F' it, there's a pattern here, just ignore all dummies.
     ((*pWindowClass->lpszClassName == L'D'||

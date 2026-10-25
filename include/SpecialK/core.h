@@ -214,7 +214,7 @@ void __stdcall SK_StartPerfMonThreads (void);
 //         packed directly into the DLL, but must be downloaded
 //           starting with v. 22.2.22
 //
-void SK_FetchBuiltinSounds (void);
+void SK_FetchBuiltinSounds (bool strict_integrity_check = true);
 
 extern BOOL          __SK_DisableQuickHook;
 
@@ -272,7 +272,7 @@ struct SK_AutoEventMarker {
 };
 
 #define _SK_ENABLE_FIRST_CALL_PROFILING
-#define _SK_ENABLE_MICRO_PROFILING
+//#define _SK_ENABLE_MICRO_PROFILING
 
 #ifdef _SK_ENABLE_FIRST_CALL_PROFILING
 #define SK_PROFILE_FIRST_CALL SK_AutoEventMarker _(__FUNCTIONW__);

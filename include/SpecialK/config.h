@@ -476,9 +476,6 @@ struct sk_config_t
     bool        preload_overlay       = false;  // For input processing, this is important
     bool        force_load_steamapi   = false;  // Load steam_api{64}.dll even in games
     bool        auto_pump_callbacks   =  true;
-    int         callback_probe_secs   =   180;  // How long to watch the game's own callback rate
-                                                //   before auto-pumping (0 = pump immediately)
-    bool        block_stat_callback   = false;
     bool        filter_stat_callback  = false;
     bool        spoof_BLoggedOn       = false;
     bool        auto_inject           =  true;  // Control implicit steam_api.dll bootstrapping
@@ -1146,6 +1143,7 @@ struct sk_config_t
       int     forced_multiframe   = SK_NoPreference;
       bool    allow_flip_metering =   true;
       bool    streamline_dbg_out  =  false;
+      float   dlssfg_menu_fps     =   0.0f;
       bool    slop_stop_5000      =  false;
       struct {
         float performance         =   0.0f;
@@ -1817,6 +1815,7 @@ enum class SK_GAME_ID
   Okami,                        // okami.exe
   DuckTalesRemastered,          // DuckTales.exe
   Mafia3,                       // mafia3.exe
+  Mafia3DefinitiveEdition,      // mafia3definitiveedition.exe
   Owlboy,                       // Owlboy.exe
   DarkSouls3,                   // DarkSoulsIII.exe
   Fallout4,                     // Fallout4.exe
@@ -1979,6 +1978,8 @@ enum class SK_GAME_ID
   NevernessToEverness,          // NTEGlobalGame.exe
   Dispatch,                     // Dispatch-Win64-Shipping.exe, DispatchEGS-Win64-Shipping.exe
   Timberborn,                   // Timberborn.exe
+  CONTROL_Resonant,             // CONTROLResonant.exe
+  Helldivers2,                  // Helldivers2.exe
 
   UNKNOWN_GAME               = 0xffff
 };

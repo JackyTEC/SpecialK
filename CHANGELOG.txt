@@ -1,4 +1,160 @@
-﻿26.9.25
+﻿26.10.23.1
+==========
+ + Make SteamAPI an optional automatic download for games that need it,
+     mostly Unity games since SK cannot share their non-standard DLL.
+ + Reduce filesystem checks for various sound files on every injection.
+
+26.10.23
+========
+ + Added check for D3D12 version of Metro 2033 and turn off the default
+     config profile that forced Flip Model off in D3D11.
+
+   * User may no longer configure this manually, it will always be set
+       according to which version of the game is being launched because
+         the D3D11 and D3D12 game both share the same executable name and
+           this is the only way to accomodate both.
+
+26.10.17
+========
+ + Merge pull request #391 from Evasion3356:fix/MafiaIIIDefEdition
+    * Fix Mafia III Definitive Edition SteamAPI anti-piracy protection.
+
+26.10.10
+========
+ + Removed references to unused INI parameters:
+
+    [Steam.System]          BlockUserStatsCallback
+    [Compatibility.General] FSR3Mode
+
+26.10.7.1
+=========
+ + Revert 26.10.7, too much important window management functionality will
+     be lost.
+ + Add workaround for Helldivers 2, so it will not use window management hooks.
+
+26.10.7
+=======
+ + Change DontHookWndProc's default value to true, because new hook memory
+     protection changes allow hooks in weak anti-cheat scenarios and this
+       setting restores original behavior.
+
+26.10.6.2
+=========
+ + Re-enable loader lock code in Special K's fork of MinHook, because the
+     DirectInput 8 problems mentioned in 25.5.22.2 for KEX are gone.
+
+26.10.6.1
+=========
+ + Add SlashZero's overlay framework (gp) to known dummy window classes,
+     to prevent hooking its fake SwapChains created using "gpdcw".
+
+26.10.6
+=======
+ + Apply workaround for MinHook memory protection problems in SlashZero.
+   * https://github.com/TsudaKageyu/minhook/pull/176 (FransBouma)
+
+26.10.2.1
+=========
+ + Rewrite dbghelp.dll locking code to prevent lock inversion.
+
+26.10.2
+=======
+ + Correctly report Early load-order PlugIn load status.
+
+26.10.1.2
+=========
+ + No longer allow Raw Input key release events to passthrough while SK
+     is blocking keyboard input.
+
+   The Witcher 3 processes menu input on key release, but actions on key
+     press; this causes menus to trigger while the window is not focused.
+
+   A consequence of this change is that games may believe that keys are
+     stuck down when alt-tabbing out or when activating an overlay until
+       you tap the key again.
+
+ + Add preliminary support for GameInput v1, v2 and v3 hooking.
+
+26.10.1.1
+=========
+ + Corrected libScePad.dll 2 ms Sleep (...) nop applying to wrong threads.
+
+26.10.1
+=======
+ + Omit the cICP chunk from HDR PNG screenshots, because Discord will panic
+     and strip HDR info from the transcoded thumbnail.
+
+   * The HDR PNG contains an ICC profile with identical color primaries and
+       transfer function, so ICC-compliant software still identifies it as HDR.
+
+      >> SKIV is not currently ICC-compliant :)
+
+26.9.30.1
+=========
+ + Reduced overhead of SK_Platform_GetOverlayState (...) and
+     SK_ImGui_WantMouseCapture (...) by caching overlay state for 10 frames.
+
+26.9.30
+=======
+ + Added framerate limit to apply to DLSS Frame Generation games while framegen
+     is inactive (i.e. menu screens or cutscenes).
+
+    * Right-click the "Frame Generation" status text in the DLSS section of the
+        control panel to set this limit; 0.0 = use standard limit.
+
+   Possible use-cases are to eliminate VRR flicker during loading screens, to
+     compensate for FMVs that run at a different rate or to reduce mouse lag.
+
+   @ This is an experimental hack; various frame pacing graphs do not reflect
+       the special temporary framerate limit (i.e. graph range is wrong).
+
+26.9.29.2
+=========
+ + Fixed Epic achievement unlock not taking screenshots if configured to do so.
+ + Assign GOG achievements unlock time manually, because Galaxy often does not.
+
+26.9.29.1
+=========
+ + Default CONTROL Resonant to using "Low-Latency" DLSS FG pacing mode; the
+     other two options have judder due to the game's input code.
+ + Do not use ImGui HW mouse cursor in CONTROL Resonant by default.
+
+26.9.29
+=======
+ + Allow SK to acquire D3D12 Command Queues with no debug name, instead of
+     the standard "3D Queue (GPU..." name assigned by D3D12 when injecting
+       code into a game that is already running or otherwise initialized
+         after a game creates a SwapChain.
+
+    * Fixes MIO: Memories In Orbit compatibility.
+
+26.9.28.1
+=========
+ + Fixed potential deadlock in DXGI init code if AsyncInit=false.
+
+26.9.28
+=======
+ + Hook timeBeginPeriod and timeEndPeriod from winmm.dll if it does not exist
+     in kernel32.dll; this is needed for Windows 7 support.
+ + Add bounds checking to SK_Win32_ToLowerInvariant (...).
+ + Disable Intel Hybrid Perf/Efficiency Core CPU detection code on systems
+     older than Windows 10, and only run said code if the INI setting to force
+       a game to use performance cores is enabled.
+
+26.9.27
+=======
+ + Fully restored Windows 7 support.
+
+26.9.26.1
+=========
+ + Added battle.net, upc and uplaywebcore.exe to 32-bit injection blacklist.
+
+26.9.26
+=======
+ + Handle suspended UWP processes better during Global Injection unhook.
+ + Remove ApplicationFrameHost.exe from blacklist to help with process cleanup.
+
+26.9.25
 =======
  + Fixed infinite loop in Epic Games Store manifest parser.
 
