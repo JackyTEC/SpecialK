@@ -3422,7 +3422,8 @@ SteamAPI_PumpThread (LPVOID user)
   SetCurrentThreadDescription (               L"[SK] SteamAPI Callback Pump" );
   SetThreadPriority           ( SK_GetCurrentThread (), THREAD_PRIORITY_IDLE );
 
-  bool   start_immediately = (user != nullptr);
+  bool   start_immediately = (user != nullptr) ||
+                   (config.steam.callback_probe_secs <= 0); // [Steam.System] CallbackProbeTime=0
   double callback_freq     =  0.0;
 
   if ( game_id == SK_GAME_ID::JustCause3      ||
@@ -3461,7 +3462,9 @@ SteamAPI_PumpThread (LPVOID user)
     //     frequently enough, switch the thread to auto-pump mode.
 
     const UINT TEST_PERIOD =
-      config.steam.crapcom_mode ? 1 : 180;
+      config.steam.crapcom_mode ? 1 :
+        static_cast <UINT> (std::min (config.steam.callback_probe_secs, 3600));
+      // [Steam.System] CallbackProbeTime (default 180)
       // Hurry this test up on CRAPCOM DRM
 
     LONGLONG callback_count0 = SK_SteamAPI_CallbackRunCount;

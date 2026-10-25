@@ -693,6 +693,7 @@ struct {
     sk::ParameterInt64*   appid                   = nullptr;
     sk::ParameterInt*     init_delay              = nullptr;
     sk::ParameterBool*    auto_pump               = nullptr;
+    sk::ParameterInt*     callback_probe          = nullptr;
     sk::ParameterBool*    block_stat_callback     = nullptr;
     sk::ParameterBool*    filter_stat_callbacks   = nullptr;
     sk::ParameterBool*    load_early              = nullptr;
@@ -2422,6 +2423,7 @@ auto DeclKeybind =
     ConfigEntry (steam.system.appid,                     L"Steam AppID",                                               dll_ini,         L"Steam.System",          L"AppID"),
     ConfigEntry (steam.system.init_delay,                L"Delay SteamAPI initialization if the game doesn't do it",   dll_ini,         L"Steam.System",          L"AutoInitDelay"),
     ConfigEntry (steam.system.auto_pump,                 L"Should we force the game to run Steam callbacks?",          dll_ini,         L"Steam.System",          L"AutoPumpCallbacks"),
+    ConfigEntry (steam.system.callback_probe,            L"Seconds to measure game's callback rate before auto-pump",  dll_ini,         L"Steam.System",          L"CallbackProbeTime"),
     ConfigEntry (steam.system.block_stat_callback,       L"Block the User Stats Receipt Callback?",                    dll_ini,         L"Steam.System",          L"BlockUserStatsCallback"),
     ConfigEntry (steam.system.filter_stat_callbacks,     L"Filter Unrelated Data from the User Stats Receipt Callback",dll_ini,         L"Steam.System",          L"FilterExternalDataFromCallbacks"),
     ConfigEntry (steam.system.load_early,                L"Load the Steam Client DLL Early?",                          dll_ini,         L"Steam.System",          L"PreLoadSteamClient"),
@@ -6271,6 +6273,7 @@ auto DeclKeybind =
 
   steam.system.init_delay->load               (config.steam.init_delay);
   steam.system.auto_pump->load                (config.steam.auto_pump_callbacks);
+  steam.system.callback_probe->load           (config.steam.callback_probe_secs);
   steam.system.block_stat_callback->load      (config.steam.block_stat_callback);
   steam.system.filter_stat_callbacks->load    (config.steam.filter_stat_callback);
   steam.system.load_early->load               (config.steam.preload_client);
@@ -7878,6 +7881,7 @@ SK_SaveConfig ( std::wstring name,
   steam.system.appid->store                    (config.steam.appid);
   steam.system.init_delay->store               (config.steam.init_delay);
   steam.system.auto_pump->store                (config.steam.auto_pump_callbacks);
+  steam.system.callback_probe->store           (config.steam.callback_probe_secs);
   steam.system.block_stat_callback->store      (config.steam.block_stat_callback);
   steam.system.filter_stat_callbacks->store    (config.steam.filter_stat_callback);
   steam.system.load_early->store               (config.steam.preload_client);

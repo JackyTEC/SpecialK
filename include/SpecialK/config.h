@@ -476,6 +476,8 @@ struct sk_config_t
     bool        preload_overlay       = false;  // For input processing, this is important
     bool        force_load_steamapi   = false;  // Load steam_api{64}.dll even in games
     bool        auto_pump_callbacks   =  true;
+    int         callback_probe_secs   =   180;  // How long to watch the game's own callback rate
+                                                //   before auto-pumping (0 = pump immediately)
     bool        block_stat_callback   = false;
     bool        filter_stat_callback  = false;
     bool        spoof_BLoggedOn       = false;
